@@ -59,61 +59,70 @@
     fish-foreign-env.flake = false;
   };
 
-  outputs = { self, nixpkgs, home-manager, darwin, ... }@inputs: let
-    # Overlays is the list of overlays we want to apply from flake inputs.
-    overlays = [
-      inputs.jujutsu.overlays.default
-      inputs.zig.overlays.default
+  outputs =
+    {
+      self,
+      nixpkgs,
+      home-manager,
+      darwin,
+      ...
+    }@inputs:
+    let
+      # Overlays is the list of overlays we want to apply from flake inputs.
+      overlays = [
+        inputs.jujutsu.overlays.default
+        inputs.zig.overlays.default
 
-      (final: prev: rec {
-        # gh CLI on stable has bugs.
-        gh = inputs.nixpkgs-unstable.legacyPackages.${prev.system}.gh;
+        (final: prev: rec {
+          # gh CLI on stable has bugs.
+          gh = inputs.nixpkgs-unstable.legacyPackages.${prev.system}.gh;
 
-        # Want the latest version of these
-        claude-code = inputs.nixpkgs-unstable.legacyPackages.${prev.system}.claude-code;
-        nushell = inputs.nixpkgs-unstable.legacyPackages.${prev.system}.nushell;
+          # Want the latest version of these
+          # claude-code = inputs.nixpkgs-unstable.legacyPackages.${prev.system}.claude-code;
+          nushell = inputs.nixpkgs-unstable.legacyPackages.${prev.system}.nushell;
 
-        ibus = ibus_stable;
-        ibus_stable = inputs.nixpkgs.legacyPackages.${prev.system}.ibus;
-        ibus_1_5_29 = inputs.nixpkgs-old-ibus.legacyPackages.${prev.system}.ibus;
-        ibus_1_5_31 = inputs.nixpkgs-unstable.legacyPackages.${prev.system}.ibus;
-      })
-    ];
+          ibus = ibus_stable;
+          ibus_stable = inputs.nixpkgs.legacyPackages.${prev.system}.ibus;
+          ibus_1_5_29 = inputs.nixpkgs-old-ibus.legacyPackages.${prev.system}.ibus;
+          ibus_1_5_31 = inputs.nixpkgs-unstable.legacyPackages.${prev.system}.ibus;
+        })
+      ];
 
-    mkSystem = import ./lib/mksystem.nix {
-      inherit overlays nixpkgs inputs;
+      mkSystem = import ./lib/mksystem.nix {
+        inherit overlays nixpkgs inputs;
+      };
+    in
+    {
+      nixosConfigurations.vm-aarch64 = mkSystem "vm-aarch64" {
+        system = "aarch64-linux";
+        user = "mitchellh";
+      };
+
+      nixosConfigurations.vm-aarch64-prl = mkSystem "vm-aarch64-prl" rec {
+        system = "aarch64-linux";
+        user = "mitchellh";
+      };
+
+      nixosConfigurations.vm-aarch64-utm = mkSystem "vm-aarch64-utm" rec {
+        system = "aarch64-linux";
+        user = "mitchellh";
+      };
+
+      nixosConfigurations.vm-intel = mkSystem "vm-intel" rec {
+        system = "x86_64-linux";
+        user = "mitchellh";
+      };
+
+      nixosConfigurations.wsl = mkSystem "wsl" {
+        system = "x86_64-linux";
+        user = "mitchellh";
+        wsl = true;
+      };
+
+      darwinConfigurations.macbook-pro-m1 = mkSystem "macbook-pro-m1" {
+        system = "aarch64-darwin";
+        user = "mitchellh";
+        darwin = true;
+      };
     };
-  in {
-    nixosConfigurations.vm-aarch64 = mkSystem "vm-aarch64" {
-      system = "aarch64-linux";
-      user   = "mitchellh";
-    };
-
-    nixosConfigurations.vm-aarch64-prl = mkSystem "vm-aarch64-prl" rec {
-      system = "aarch64-linux";
-      user   = "mitchellh";
-    };
-
-    nixosConfigurations.vm-aarch64-utm = mkSystem "vm-aarch64-utm" rec {
-      system = "aarch64-linux";
-      user   = "mitchellh";
-    };
-
-    nixosConfigurations.vm-intel = mkSystem "vm-intel" rec {
-      system = "x86_64-linux";
-      user   = "mitchellh";
-    };
-
-    nixosConfigurations.wsl = mkSystem "wsl" {
-      system = "x86_64-linux";
-      user   = "mitchellh";
-      wsl    = true;
-    };
-
-    darwinConfigurations.macbook-pro-m1 = mkSystem "macbook-pro-m1" {
-      system = "aarch64-darwin";
-      user   = "mitchellh";
-      darwin = true;
-    };
-  };
 }
