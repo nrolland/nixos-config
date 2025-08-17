@@ -16,7 +16,8 @@
       experimental-features = nix-command flakes
       keep-outputs = true
       keep-derivations = true
-    '';
+      auto-optimise-store = true
+      auto-optimise-store-interval = 60'';
 
     # public binary cache that I use for all my derivations. You can keep
     # this, use your own, or toss it. Its typically safe to use a binary cache
