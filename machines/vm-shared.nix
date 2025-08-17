@@ -113,7 +113,10 @@
     # You can test if you don't need this by deleting this and seeing
     # if the clipboard sill works.
     gtkmm3
+    pkgs.nix-ld
   ];
+
+  programs.nix-ld.enable = true;
 
   # Our default non-specialised desktop environment.
   services.xserver = lib.mkIf (config.specialisation != {}) {
