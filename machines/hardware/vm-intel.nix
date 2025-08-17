@@ -6,11 +6,15 @@
 {
   imports = [ ];
 
-  boot.initrd.availableKernelModules = [
-    "ata_piix" "mptspi" "uhci_hcd" "ehci_pci" "sd_mod" "sr_mod" "nvme" ];
+  boot.initrd.availableKernelModules = ["ata_piix" "mptspi" "uhci_hcd" "ehci_pci" "sd_mod" "sr_mod" "nvme" ];
   boot.initrd.kernelModules = [ ];
   boot.kernelModules = [ ];
   boot.extraModulePackages = [ ];
+  # boot.blacklistedKernelModules = ["b43"  "ssb"  "brcmfmac" "brcmsmac" "bcma"];
+  # boot.kernelModules = [ "wl" ];
+  # boot.extraModulePackages = [ config.boot.kernelPackages.broadcom_sta ];
+
+  # hardware.enableAllFirmware = true;
 
   fileSystems."/" =
     { device = "/dev/disk/by-label/nixos";

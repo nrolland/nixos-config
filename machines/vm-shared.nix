@@ -30,6 +30,7 @@
   nixpkgs.config.permittedInsecurePackages = [
     # Needed for k2pdfopt 2.53.
     "mupdf-1.17.0"
+    # "broadcom-sta-6.30.223.271-57-6.12.41"
   ];
 
   # Use the systemd-boot EFI boot loader.
