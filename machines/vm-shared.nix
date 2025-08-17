@@ -114,6 +114,7 @@
     # if the clipboard sill works.
     gtkmm3
     pkgs.nix-ld
+    wget
   ];
 
   programs.nix-ld.enable = true;
