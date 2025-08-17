@@ -17,7 +17,13 @@
       keep-outputs = true
       keep-derivations = true
       auto-optimise-store = true
-      auto-optimise-store-interval = 60'';
+      auto-optimise-store-interval = 60
+      auto-optimise-store-max-age = 7d
+      auto-optimise-store-max-size = 10G
+      auto-optimise-store-max-jobs = 4
+      auto-optimise-store-max-queue-size = 1000
+      auto-optimise-store-max-queue-age = 1h
+      auto-optimise-store-max-queue-items = 1000'';
 
     # public binary cache that I use for all my derivations. You can keep
     # this, use your own, or toss it. Its typically safe to use a binary cache
