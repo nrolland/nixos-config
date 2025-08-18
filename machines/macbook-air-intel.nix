@@ -1,92 +1,136 @@
-{ config, pkgs, ... }: {
-  # Set in Sept 2024 as part of the macOS Sequoia release.
-  system.stateVersion = 5;
+ Edit this configuration file to define what should be installed on
+# your system.  Help is available in the configuration.nix(5) man page
+# and in the NixOS manual (accessible by running ‘nixos-help’).
 
-  # This makes it work with the Determinate Nix installer
-  ids.gids.nixbld = 30000;
+{ config, pkgs, ... }:
 
-  # We use proprietary software on this machine
-  nixpkgs.config.allowUnfree = true;
+{
+  imports =
+    [ # Include the results of the hardware scan.
+      ./hardware/mbair-intel.nix
+    ];
 
-  # broadcom driver suff
-  boot.blacklistedKernelModules = ["b43"  "ssb"  "brcmfmac" "brcmsmac" "bcma"];
-  boot.kernelModules = [ "wl" ];
-  boot.extraModulePackages = [ config.boot.kernelPackages.broadcom_sta ];
-  hardware.enableAllFirmware = true;
-  nipkgs.config.permittedInsecurePackages = [
-     "broadcom-sta-6.30.223.271-57-6.12.41"
-  ];
+  # Bootloader.
+  boot.loader.systemd-boot.enable = true;
+  boot.loader.efi.canTouchEfiVariables = true;
 
-  # Keep in async with vm-shared.nix. (todo: pull this out into a file)
-  nix = {
-    # We use the determinate-nix installer which manages Nix for us,
-    # so we don't want nix-darwin to do it.
-    enable = false;
+  nix.settings.experimental-features = [ "nix-command" "flakes" ];
+  # networking.hostName = "nixos"; # Define your hostname.
+  #networking.wireless.enable = false; #true;  # Enables wireless support via wpa_supplicant.
 
-    # We need to enable flakes
-    extraOptions = ''
-      experimental-features = nix-command flakes
-      keep-outputs = true
-      keep-derivations = true
-    '';
+  # Configure network proxy if necessary
+  # networking.proxy.default = "http://user:password@proxy:port/";
+  # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
 
-    # Enable the Linux builder so we can run Linux builds on our Mac.
-    # This can be debugged by running `sudo ssh linux-builder`
-    linux-builder = {
-      enable = false;
-      ephemeral = true;
-      maxJobs = 4;
-      config = ({ pkgs, ... }: {
-        # Make our builder beefier since we're on a beefy machine.
-        virtualisation = {
-          cores = 6;
-          darwin-builder = {
-            diskSize = 100 * 1024; # 100GB
-            memorySize = 32 * 1024; # 32GB
-          };
-        };
+  # Enable networking
+  networking.networkmanager.enable = true;
 
-        # Add some common debugging tools we can see whats up.
-        environment.systemPackages = [
-          pkgs.htop
-        ];
-      });
-    };
+  # Set your time zone.
+  time.timeZone = "Europe/Paris";
 
-    # public binary cache that I use for all my derivations. You can keep
-    # this, use your own, or toss it. Its typically safe to use a binary cache
-    # since the data inside is checksummed.
-    settings = {
-      substituters = ["https://mitchellh-nixos-config.cachix.org"];
-      trusted-public-keys = ["mitchellh-nixos-config.cachix.org-1:bjEbXJyLrL1HZZHBbO4QALnI5faYZppzkU4D2s0G8RQ="];
+  # Select internationalisation properties.
+  i18n.defaultLocale = "en_US.UTF-8";
 
-      # Required for the linux builder
-      trusted-users = ["@admin"];
-    };
+  i18n.extraLocaleSettings = {
+    LC_ADDRESS = "fr_FR.UTF-8";
+    LC_IDENTIFICATION = "fr_FR.UTF-8";
+    LC_MEASUREMENT = "fr_FR.UTF-8";
+    LC_MONETARY = "fr_FR.UTF-8";
+    LC_NAME = "fr_FR.UTF-8";
+    LC_NUMERIC = "fr_FR.UTF-8";
+    LC_PAPER = "fr_FR.UTF-8";
+    LC_TELEPHONE = "fr_FR.UTF-8";
+    LC_TIME = "fr_FR.UTF-8";
   };
 
-  # zsh is the default shell on Mac and we want to make sure that we're
-  # configuring the rc correctly with nix-darwin paths.
-  programs.zsh.enable = true;
-  programs.zsh.shellInit = ''
-    # Nix
-    if [ -e '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh' ]; then
-      . '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh'
-    fi
-    # End Nix
-    '';
+  # Enable the X11 windowing system.
+  services.xserver.enable = true;
 
-  programs.fish.enable = true;
-  programs.fish.shellInit = ''
-    # Nix
-    if test -e '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.fish'
-      source '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.fish'
-    end
-    # End Nix
-    '';
+  # Enable the GNOME Desktop Environment.
+  services.xserver.displayManager.gdm.enable = true;
+  services.xserver.desktopManager.gnome.enable = true;
 
-  environment.shells = with pkgs; [ bashInteractive zsh fish ];
+  # Configure keymap in X11
+  services.xserver.xkb = {
+    layout = "us";
+    variant = "";
+  };
+
+  # Enable CUPS to print documents.
+  services.printing.enable = true;
+
+  # Enable sound with pipewire.
+  services.pulseaudio.enable = false;
+  security.rtkit.enable = true;
+  services.pipewire = {
+    enable = true;
+    alsa.enable = true;
+    alsa.support32Bit = true;
+    pulse.enable = true;
+    # If you want to use JACK applications, uncomment this
+    #jack.enable = true;
+
+    # use the example session manager (no others are packaged yet so this is enabled by default,
+    # no need to redefine it in your config for now)
+    #media-session.enable = true;
+  };
+
+  # Enable touchpad support (enabled default in most desktopManager).
+  # services.xserver.libinput.enable = true;
+
+  # Define a user account. Don't forget to set a password with ‘passwd’.
+  users.users.nrolland = {
+    isNormalUser = true;
+    description = "nrolland";
+    extraGroups = [ "networkmanager" "wheel" ];
+    packages = with pkgs; [
+    #  thunderbird
+    ];
+  };
+
+  # Install firefox.
+  programs.firefox.enable = true;
+
+  # Allow unfree packages
+  nixpkgs.config.allowUnfree = true;
+
+  # List packages installed in system profile. To search, run:
+  # $ nix search wget
   environment.systemPackages = with pkgs; [
-    cachix
+    vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
+    wget
+    git
+    pkgs.nix-ld
+    neofetch
+    htop
   ];
+
+  programs.nix-ld.enable = true;
+  # Some programs need SUID wrappers, can be configured further or are
+  # started in user sessions.
+  # programs.mtr.enable = true;
+  # programs.gnupg.agent = {
+  #   enable = true;
+  #   enableSSHSupport = true;
+  # };
+
+  # List services that you want to enable:
+
+  # Enable the OpenSSH daemon.
+  services.openssh.enable = true;
+
+  # Open ports in the firewall.
+  # networking.firewall.allowedTCPPorts = [ ... ];
+  # networking.firewall.allowedUDPPorts = [ ... ];
+  # Or disable the firewall altogether.
+  # networking.firewall.enable = false;
+
+  # This value determines the NixOS release from which the default
+  # settings for stateful data, like file locations and database versions
+  # on your system were taken. It‘s perfectly fine and recommended to leave
+  # this value at the release version of the first install of this system.
+  # Before changing this value read the documentation for this option
+  # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
+  system.stateVersion = "25.11"; # Did you read the comment?
+
 }

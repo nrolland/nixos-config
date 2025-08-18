@@ -113,6 +113,11 @@
         user = "mitchellh";
       };
 
+      nixosConfigurations.macbook-air-intel = mkSystem "macbook-air-intel" rec {
+        system = "x86_64-linux";
+        user = "mitchellh";
+      };
+
       nixosConfigurations.wsl = mkSystem "wsl" {
         system = "x86_64-linux";
         user = "mitchellh";
